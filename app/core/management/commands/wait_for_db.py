@@ -1,7 +1,7 @@
 """
 Django command to check if the database is up and running.
 """
-from typing import Any, Union, Optional, List
+from typing import Any, Optional
 from django.core.management.base import BaseCommand
 import time
 from psycopg2 import OperationalError as Psycopg2Error
