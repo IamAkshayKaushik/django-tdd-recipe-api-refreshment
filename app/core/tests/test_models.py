@@ -1,8 +1,12 @@
 """
 Tests for models
 """
+from decimal import Decimal # This is used to ensure that the price field is a decimal
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model  # get_user_model() returns the User model
+
+from core import models
 
 
 class ModelTests(TestCase):
@@ -44,3 +48,24 @@ class ModelTests(TestCase):
 
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+
+    def test_create_recipe(self):
+        """Test creating a recipe"""
+        user = get_user_model().objects.create_user(
+            email='test@example.com',
+            password='test@123',
+            name='Test User'
+        )
+
+        recipe = models.Recipe.objects.create(
+            user=user,
+            title='Test Recipe',
+            price=Decimal('4.99'),
+            time_minutes = 10,
+            description='Recipe Description'
+        )
+        self.assertEqual(recipe.title, 'Test Recipe')
+        self.assertEqual(recipe.price, Decimal('4.99'))
+        self.assertEqual(recipe.time_minutes, 10)
+        self.assertEqual(recipe.description, 'Recipe Description')

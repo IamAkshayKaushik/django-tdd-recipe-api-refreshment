@@ -1,8 +1,10 @@
-# FROM python:3.11-slim-buster
+# FROM python:3.11-slim-bullseye
 FROM python:3.11-alpine3.19
 
 LABEL maintainer="github.com/IamAkshayKaushik"
 
+ENV PIP_DISABLE_PIP_VERSION_CHECK 1
+ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 COPY ./requirements.txt /tmp/requirements.txt
