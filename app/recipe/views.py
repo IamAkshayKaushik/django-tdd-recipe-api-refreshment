@@ -9,7 +9,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from core.models import Recipe
-from recipe.serializers import RecipeSerializer
+from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
 class RecipeViewset(viewsets.ModelViewSet):
     """Manage recipes in the database"""
@@ -22,3 +22,9 @@ class RecipeViewset(viewsets.ModelViewSet):
         """Retrieve the recipes for the authenticated user"""
         queryset = self.queryset.filter(user=self.request.user).order_by('-id')
         return queryset
+
+    def get_serializer_class(self):
+        """Return appropriate serializer class"""
+        if self.action =='list':
+            return self.serializer_class
+        return RecipeDetailSerializer

@@ -14,5 +14,12 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('id', 'title', 'time_minutes', 'price', 'link', 'user')
+        fields = ['id', 'title', 'time_minutes', 'price', 'link', 'user']
         read_only_fields = ('id',)
+
+
+class RecipeDetailSerializer(RecipeSerializer):
+    """Serializer for the recipe detail view"""
+
+    class Meta(RecipeSerializer.Meta): # This is used to inherit the fields from the parent class
+        fields = RecipeSerializer.Meta.fields + ['description']
