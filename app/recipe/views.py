@@ -13,7 +13,7 @@ from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
 class RecipeViewset(viewsets.ModelViewSet):
     """Manage recipes in the database"""
-    serializer_class = RecipeSerializer
+    serializer_class = RecipeDetailSerializer
     queryset = Recipe.objects.all()
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -23,8 +23,14 @@ class RecipeViewset(viewsets.ModelViewSet):
         queryset = self.queryset.filter(user=self.request.user).order_by('-id')
         return queryset
 
+    # Override the get_serializer_class method to return the appropriate serializer class based on the action being performed
     def get_serializer_class(self):
         """Return appropriate serializer class"""
         if self.action =='list':
-            return self.serializer_class
-        return RecipeDetailSerializer
+            return RecipeSerializer
+        return self.serializer_class
+
+    # perform_create method runs before the serializer.save() on post requests
+    def perform_create(self, serializer):
+        """Create a new recipe"""
+        serializer.save(user=self.request.user)

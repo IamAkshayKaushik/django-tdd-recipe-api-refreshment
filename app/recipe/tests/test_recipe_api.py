@@ -87,7 +87,7 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
-    def test_view_recipe_detail(self):
+    def test_get_recipe_detail(self):
         """Test viewing a recipe detail"""
         recipe = create_recipe(self.user)
 
@@ -97,3 +97,98 @@ class PrivateRecipeApiTests(TestCase):
         serializer = RecipeDetailSerializer(recipe)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_create_recipe(self):
+        """Test creating a new recipe"""
+        payload = {
+            'title': 'Sample recipe',
+            'time_minutes': 10,
+            'price': Decimal('4.99'),
+        }
+
+        res = self.client.post(RECIPE_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        recipe = Recipe.objects.get(id=res.data['id'])
+        serializer = RecipeDetailSerializer(recipe)
+
+        # self.assertEqual(res.data, serializer.data)
+        for key, value in payload.items():
+            self.assertEqual(value, getattr(recipe, key))
+
+        self.assertEqual(recipe.user, self.user)
+
+    def test_partial_update_recipe(self):
+        """Test updating a recipe with patch"""
+        link='https://www.example.com'
+        recipe = create_recipe(self.user, title='Old recipe', link=link)
+
+        payload = {'title': 'New recipe'}
+        url = detail_url(recipe.id)
+        res = self.client.patch(url, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        recipe.refresh_from_db() # This will refresh the recipe from the database
+        self.assertEqual(recipe.title, payload['title'])
+        self.assertEqual(recipe.link, recipe.link)
+        self.assertEqual(recipe.user, self.user)
+
+    def test_full_update_recipe(self):
+        """Test updating a recipe with put"""
+        recipe = create_recipe(self.user)
+
+        payload = {
+            'title': 'New recipe',
+            'time_minutes': 15,
+            'price': Decimal('4.99'),
+            'description': 'New description',
+            'link': 'https://www.example.com',
+        }
+        url = detail_url(recipe.id)
+        res = self.client.put(url, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        recipe.refresh_from_db() # This will refresh the recipe from the database
+        for key, value in payload.items():
+            self.assertEqual(value, getattr(recipe, key))
+        self.assertEqual(recipe.user, self.user)
+
+    def test_change_user_give_error(self):
+        """Test that a user can't change another user's recipe"""
+        user2 = get_user_model().objects.create_user(
+            'test2@example.com',
+            'test2@123'
+        )
+        recipe = create_recipe(self.user)
+
+        payload = {'user': user2}
+        url = detail_url(recipe.id)
+        res = self.client.patch(url, payload)
+
+        recipe.refresh_from_db() # This will refresh the recipe from the database
+        self.assertEqual(recipe.user, self.user)
+
+    def test_delete_recipe(self):
+        """Test deleting a recipe"""
+        recipe = create_recipe(self.user)
+
+        url = detail_url(recipe.id)
+        res = self.client.delete(url)
+
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(Recipe.objects.filter(id=recipe.id).exists())
+
+    def test_recipe_other_user_cannot_delete(self):
+        """Test that a user can't delete another user's recipe"""
+        user2 = get_user_model().objects.create_user(
+            'test2@example.com',
+            'test2@123'
+        )
+        recipe = create_recipe(user2)
+
+        url = detail_url(recipe.id)
+        res = self.client.delete(url)
+
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(Recipe.objects.filter(id=recipe.id).exists())
