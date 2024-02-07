@@ -1,12 +1,23 @@
 """
 Tests for models
 """
-from decimal import Decimal # This is used to ensure that the price field is a decimal
+from decimal import Decimal  # This is used to ensure that the price field is a decimal
 
 from django.test import TestCase
 from django.contrib.auth import get_user_model  # get_user_model() returns the User model
 
 from core import models
+
+
+def create_user(**params):
+    """Helper function to create a new user"""
+    default_user = {
+        'email': 'user@example.com',
+        'password': 'user@1234',
+    }
+
+    default_user.update(params)  # Update the default_user with the params
+    return get_user_model().objects.create_user(**default_user)
 
 
 class ModelTests(TestCase):
@@ -49,7 +60,6 @@ class ModelTests(TestCase):
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
 
-
     def test_create_recipe(self):
         """Test creating a recipe"""
         user = get_user_model().objects.create_user(
@@ -62,10 +72,17 @@ class ModelTests(TestCase):
             user=user,
             title='Test Recipe',
             price=Decimal('4.99'),
-            time_minutes = 10,
+            time_minutes=10,
             description='Recipe Description'
         )
         self.assertEqual(recipe.title, 'Test Recipe')
         self.assertEqual(recipe.price, Decimal('4.99'))
         self.assertEqual(recipe.time_minutes, 10)
         self.assertEqual(recipe.description, 'Recipe Description')
+
+    def test_create_tag(self):
+        """Test Creating a tag is successful"""
+        user = create_user()
+        tag = models.Tag.objects.create(name="tag1", user=user)
+
+        self.assertEqual(str(tag), tag.name)

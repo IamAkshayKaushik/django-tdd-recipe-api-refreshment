@@ -3,11 +3,14 @@ Database models
 """
 from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import (AbstractBaseUser,
+                                        BaseUserManager,
+                                        PermissionsMixin)
 
 
 class UserManager(BaseUserManager):
-    """ Custom user model manager where email is the unique identifiers for authentication"""
+    """ Custom user model manager where email is
+    the unique identifiers for authentication"""
 
     def create_user(self, email, password=None, **extra_fields):
         """ Create and save a new user """
@@ -65,8 +68,21 @@ class Recipe(models.Model):
     description = models.TextField(blank=True)
     time_minutes = models.IntegerField()
     link = models.CharField(max_length=255, blank=True)
+    tags = models.ManyToManyField("Tag")
     # ingredients = models.ManyToManyField('Ingredient')
 
     def __str__(self):
         """Return the model as a string in admin"""
         return self.title
+
+
+class Tag(models.Model):
+    """Tag for filtering recipes."""
+    name = models.CharField(max_length=255)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="tags")
+
+    def __str__(self):
+        return self.name
