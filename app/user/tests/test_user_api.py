@@ -13,7 +13,6 @@ TOKEN_URL = reverse('user:token')
 ME_URL = reverse('user:me')
 
 
-
 def create_user(**params):
     """Helper function to create a user"""
     return get_user_model().objects.create_user(**params)
@@ -69,7 +68,6 @@ class PublicUserApiTests(TestCase):
         user_exists = get_user_model().objects.filter(
             email=payload['email']).exists()
         self.assertFalse(user_exists)
-
 
     def test_create_token_for_user(self):
         """Test that a token is created for the user"""
@@ -131,9 +129,9 @@ class PublicUserApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-
 class TestAuthenticatedUserApiTests(TestCase):
     """Test API requests that require authentication"""
+
     def setUp(self):
         self.user = create_user(
             email="test@example.com",
@@ -152,7 +150,7 @@ class TestAuthenticatedUserApiTests(TestCase):
         self.assertEqual(res.data, {
             'name': self.user.name,
             'email': self.user.email
-            })
+        })
 
     def test_post_me_not_allowed(self):
         """Test that POST is not allowed on the me URL"""
@@ -165,7 +163,7 @@ class TestAuthenticatedUserApiTests(TestCase):
 
         res = self.client.patch(ME_URL, payload)
 
-        self.user.refresh_from_db() # Refresh the user from the DB (Because it is cached)
+        self.user.refresh_from_db()  # Refresh from DB (Because it is cached)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(self.user.name, payload['name'])
         self.assertTrue(self.user.check_password(payload['password']))
