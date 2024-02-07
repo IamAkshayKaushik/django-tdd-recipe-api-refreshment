@@ -2,14 +2,15 @@
 Views for the recipe app
 """
 
-from django.utils.translation import gettext as _
 
-from rest_framework import generics, viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models import Recipe
-from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
+from core.models import Recipe, Tag
+from recipe.serializers import (RecipeSerializer,
+                                RecipeDetailSerializer, TagSerializer)
+
 
 class RecipeViewset(viewsets.ModelViewSet):
     """Manage recipes in the database"""
@@ -23,10 +24,11 @@ class RecipeViewset(viewsets.ModelViewSet):
         queryset = self.queryset.filter(user=self.request.user).order_by('-id')
         return queryset
 
-    # Override the get_serializer_class method to return the appropriate serializer class based on the action being performed
+    # Override the get_serializer_class method to return
+    # the appropriate serializer class based on the action being performed
     def get_serializer_class(self):
         """Return appropriate serializer class"""
-        if self.action =='list':
+        if self.action == 'list':
             return RecipeSerializer
         return self.serializer_class
 
@@ -34,3 +36,15 @@ class RecipeViewset(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Create a new recipe"""
         serializer.save(user=self.request.user)
+
+
+class TagViewset(viewsets.GenericViewSet, mixins.ListModelMixin):
+    """ Manage tags in the database """
+    serializer_class = TagSerializer
+    queryset = Tag.objects.all()
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """ Return objects for the current authenticated user only """
+        return self.queryset.filter(user=self.request.user).order_by('-name')

@@ -1,7 +1,7 @@
 """
 Tests for recipe APIs
 """
-from decimal import Decimal # This is used to ensure that the price field is a decimal
+from decimal import Decimal  # Used to ensure that the price field is a decimal
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -32,8 +32,9 @@ def create_recipe(user, **params):
         'description': 'Sample description',
         'link': 'https://www.example.com',
     }
-    defaults.update(params) # Update the defaults with the params passed in
-    return Recipe.objects.create(user=user, **defaults) # Create the recipe with the user and the defaults
+    defaults.update(params)  # Update the defaults with the params passed in
+    # Create the recipe with the user and the defaults
+    return Recipe.objects.create(user=user, **defaults)
 
 
 class PublicRecipeApiTests(TestCase):
@@ -110,7 +111,7 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         recipe = Recipe.objects.get(id=res.data['id'])
-        serializer = RecipeDetailSerializer(recipe)
+        # serializer = RecipeDetailSerializer(recipe)
 
         # self.assertEqual(res.data, serializer.data)
         for key, value in payload.items():
@@ -120,7 +121,7 @@ class PrivateRecipeApiTests(TestCase):
 
     def test_partial_update_recipe(self):
         """Test updating a recipe with patch"""
-        link='https://www.example.com'
+        link = 'https://www.example.com'
         recipe = create_recipe(self.user, title='Old recipe', link=link)
 
         payload = {'title': 'New recipe'}
@@ -128,7 +129,7 @@ class PrivateRecipeApiTests(TestCase):
         res = self.client.patch(url, payload)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        recipe.refresh_from_db() # This will refresh the recipe from the database
+        recipe.refresh_from_db()  # Refresh the recipe from the database
         self.assertEqual(recipe.title, payload['title'])
         self.assertEqual(recipe.link, recipe.link)
         self.assertEqual(recipe.user, self.user)
@@ -148,7 +149,7 @@ class PrivateRecipeApiTests(TestCase):
         res = self.client.put(url, payload)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        recipe.refresh_from_db() # This will refresh the recipe from the database
+        recipe.refresh_from_db()  # Refresh the recipe from the database
         for key, value in payload.items():
             self.assertEqual(value, getattr(recipe, key))
         self.assertEqual(recipe.user, self.user)
@@ -163,9 +164,9 @@ class PrivateRecipeApiTests(TestCase):
 
         payload = {'user': user2}
         url = detail_url(recipe.id)
-        res = self.client.patch(url, payload)
+        self.client.patch(url, payload)
 
-        recipe.refresh_from_db() # This will refresh the recipe from the database
+        recipe.refresh_from_db()  # Refresh the recipe from the database
         self.assertEqual(recipe.user, self.user)
 
     def test_delete_recipe(self):

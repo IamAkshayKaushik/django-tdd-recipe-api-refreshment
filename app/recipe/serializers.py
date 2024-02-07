@@ -2,15 +2,18 @@
 Serializer for the recipe API
 """
 
-from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from core.models import Recipe
+from core.models import Recipe, Tag
+
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Serializer for the recipe object"""
-    user = serializers.StringRelatedField(read_only=True) # This field is used to ensure that the author field is a string and not a user object
+
+    '''This field is used to ensure that the author field
+    is a string and not a user object'''
+    user = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -21,5 +24,14 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeDetailSerializer(RecipeSerializer):
     """Serializer for the recipe detail view"""
 
-    class Meta(RecipeSerializer.Meta): # This is used to inherit the fields from the parent class
+    class Meta(RecipeSerializer.Meta):  # inherit the fields from the parent
         fields = RecipeSerializer.Meta.fields + ['description']
+
+
+class TagSerializer(serializers.ModelSerializer):
+    """Serializer for Tags"""""
+
+    class Meta:
+        model = Tag
+        fields = ['id', 'name']
+        read_only_fields = ['id']
