@@ -61,3 +61,22 @@ class RecipeDetailSerializer(RecipeSerializer):
 
     class Meta(RecipeSerializer.Meta):  # inherit the fields from the parent
         fields = RecipeSerializer.Meta.fields + ['description']
+
+    def update(self, instance, validated_data):
+        """Update a recipe"""
+        tags = validated_data.pop('tags', None)
+        if tags is not None:
+            instance.tags.clear()
+            for tag in tags:
+                tag_obj, created = Tag.objects.get_or_create(
+                    user=instance.user,
+                    **tag
+                )
+                instance.tags.add(tag_obj)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+        # return super().update(instance, validated_data)
