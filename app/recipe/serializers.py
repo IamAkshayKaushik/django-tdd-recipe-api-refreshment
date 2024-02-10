@@ -33,6 +33,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     is a string and not a user object'''
     user = serializers.StringRelatedField(read_only=True)
     tags = TagSerializer(many=True, required=False)
+    ingredients = IngredientSerializer(many=True, required=False)
 
     class Meta:
         model = Recipe
@@ -42,13 +43,15 @@ class RecipeSerializer(serializers.ModelSerializer):
                   'price',
                   'link',
                   'user',
-                  'tags'
+                  'tags',
+                  'ingredients',
                   ]
         read_only_fields = ['id']
 
     def create(self, validated_data):
         """Create a new recipe"""
         tags = validated_data.pop('tags', [])
+        ingredients = validated_data.pop('ingredients', [])
         # Create the recipe with the user and the defaults
         # and the tags passed in
         recipe = Recipe.objects.create(**validated_data)
@@ -62,6 +65,14 @@ class RecipeSerializer(serializers.ModelSerializer):
                 **tag
             )
             recipe.tags.add(tag_obj)
+
+        # Create or get ingredients, and add to the recipe
+        for ingredient in ingredients:
+            ingredient_obj, created = Ingredient.objects.get_or_create(
+                user=auth_user,
+                **ingredient
+            )
+            recipe.ingredients.add(ingredient_obj)
         return recipe
 
 
@@ -74,14 +85,30 @@ class RecipeDetailSerializer(RecipeSerializer):
     def update(self, instance, validated_data):
         """Update a recipe"""
         tags = validated_data.pop('tags', None)
+        ingredients = validated_data.pop('ingredients', None)
         if tags is not None:
-            instance.tags.clear()
+            instance.tags.clear()  # delete all the tags
             for tag in tags:
                 tag_obj, created = Tag.objects.get_or_create(
                     user=instance.user,
                     **tag
                 )
                 instance.tags.add(tag_obj)
+
+        if ingredients is not None:
+            # `instance.ingredients.clear()` clears all the ingredients
+            # associated with the recipe instance.
+            #  It removes all the existing ingredients from the
+            # ManyToMany relationship between the Recipe and Ingredient models.
+            # This is done before adding the new ingredients provided in the
+            # `ingredients` field of the validated data.
+            instance.ingredients.clear()  # delete all the ingredients
+            for ingredient in ingredients:
+                ingredient_obj, created = Ingredient.objects.get_or_create(
+                    user=instance.user,
+                    **ingredient
+                )
+                instance.ingredients.add(ingredient_obj)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
