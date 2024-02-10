@@ -28,6 +28,11 @@ def create_user(**params):
     return get_user_model().objects.create_user(**default_user)
 
 
+def detail_url(ingredient_id):
+    """Return ingredient detail URL"""
+    return reverse('recipe:ingredient-detail', args=[ingredient_id])
+
+
 class PublicIngredientsApiTests(TestCase):
     """Test the unauthenticated API requests"""
 
@@ -76,3 +81,26 @@ class PrivateIngredientsApiTests(TestCase):
 
         for key, value in serializer.data.items():
             self.assertEqual(value, res.data[0][key])
+
+    def test_update_ingredient_name(self):
+        """Test updating an ingredient name"""
+        ingredient = Ingredient.objects.create(user=self.user, name='Veg')
+
+        payload = {'name': 'Vegan'}
+        url = detail_url(ingredient.id)
+        res = self.client.patch(url, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        ingredient.refresh_from_db()
+        self.assertEqual(ingredient.name, payload['name'])
+
+    def test_delete_ingredient(self):
+        """Test deleting an ingredient"""
+        ingre = Ingredient.objects.create(user=self.user, name='Veg')
+
+        url = detail_url(ingre.id)
+        res = self.client.delete(url)
+
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        # used filter bcoz get throw error if no ingredient found
+        ingredient = Ingredient.objects.filter(user=self.user).first()
+        self.assertIsNone(ingredient)
