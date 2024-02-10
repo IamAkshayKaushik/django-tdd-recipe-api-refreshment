@@ -80,7 +80,7 @@ class RecipeDetailSerializer(RecipeSerializer):
     """Serializer for the recipe detail view"""
 
     class Meta(RecipeSerializer.Meta):  # inherit the fields from the parent
-        fields = RecipeSerializer.Meta.fields + ['description']
+        fields = RecipeSerializer.Meta.fields + ['description', 'image']
 
     def update(self, instance, validated_data):
         """Update a recipe"""
@@ -116,3 +116,19 @@ class RecipeDetailSerializer(RecipeSerializer):
         instance.save()
         return instance
         # return super().update(instance, validated_data)
+
+
+class RecipeImageUploadSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to recipes"""
+
+    class Meta:
+        model = Recipe
+        fields = ['id', 'image']
+        read_only_fields = ['id']
+        extra_kwargs = {'image': {'required': 'True'}}
+
+    # def save(self, **kwargs):
+    #     """Save the image in the recipe object"""
+    #     self.recipe.image = self.validated_data['image']
+    #     self.recipe.save()
+    #     return self.recipe
