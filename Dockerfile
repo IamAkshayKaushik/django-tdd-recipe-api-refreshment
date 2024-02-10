@@ -17,8 +17,9 @@ EXPOSE 8000
 RUN python -m venv /.venv && \
     /bin/sh -c "source /.venv/bin/activate" && \
     /.venv/bin/pip install --upgrade pip setuptools && \
-    apk add --update --no-cache postgresql-client && \
-    apk add --update --no-cache --virtual .tmp-build-deps build-base postgresql-dev musl-dev && \
+    apk add --update --no-cache postgresql-client jpeg-dev && \
+    apk add --update --no-cache --virtual .tmp-build-deps \
+    build-base postgresql-dev musl-dev zlib zlib-dev && \
     /.venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt && \
     rm -rf /tmp && \
     apk del .tmp-build-deps && \
