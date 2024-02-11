@@ -1,6 +1,10 @@
 """
 Views for the recipe app
 """
+from drf_spectacular.utils import (extend_schema,
+                                   extend_schema_view,
+                                   OpenApiTypes,
+                                   OpenApiParameter)
 
 
 from rest_framework import viewsets, status
@@ -18,6 +22,22 @@ from recipe.serializers import (
 )
 
 
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'tags',
+                OpenApiTypes.STR,
+                description='Comma separated list of IDs to filter',
+            ),
+            OpenApiParameter(
+                'ingredients',
+                OpenApiTypes.STR,
+                description='Comma separated list of ingredient IDs to filter',
+            )
+        ]
+    )
+)
 class RecipeViewset(viewsets.ModelViewSet):
     """Manage recipes in the database"""
     serializer_class = RecipeDetailSerializer
