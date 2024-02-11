@@ -105,33 +105,52 @@ class RecipeViewset(viewsets.ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-class TagViewset(viewsets.ModelViewSet):
-    """ Manage tags in the database """
-    serializer_class = TagSerializer
-    queryset = Tag.objects.all()
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'assigned_only',
+                OpenApiTypes.INT,
+                enum=[0, 1],
+                description='Filter by items assigned to recipes',
+            )
+        ]
+    )
+)
+class BaseRecipeAttrViewSet(viewsets.ModelViewSet):
+    """ Base viewset for recipe attributes
+        I use this for both ingredients and tags
+        to avoid duplicating code
+    """
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """ Return objects for the current authenticated user only """
-        return self.queryset.filter(user=self.request.user).order_by('-name')
+        assigned_only = bool(
+            int(self.request.query_params.get('assigned_only', 0))
+        )
+        queryset = self.queryset
 
-    def perform_create(self, serializer):
-        """ Create a new tag """
-        serializer.save(user=self.request.user)
+        if assigned_only:
+            queryset = queryset.filter(recipe__isnull=False)
 
-
-class IngredientViewset(viewsets.ModelViewSet):
-    """ Manage ingredients in the database """
-    serializer_class = IngredientSerializer
-    queryset = Ingredient.objects.all()
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        """ Return objects for the current authenticated user only """
-        return self.queryset.filter(user=self.request.user).order_by('-name')
+        return queryset.filter(
+            user=self.request.user
+        ).order_by('-name').distinct()
 
     def perform_create(self, serializer):
         """ Create a new ingredient """
         serializer.save(user=self.request.user)
+
+
+class TagViewset(BaseRecipeAttrViewSet):
+    """ Manage tags in the database """
+    serializer_class = TagSerializer
+    queryset = Tag.objects.all()
+
+
+class IngredientViewset(BaseRecipeAttrViewSet):
+    """ Manage ingredients in the database """
+    serializer_class = IngredientSerializer
+    queryset = Ingredient.objects.all()

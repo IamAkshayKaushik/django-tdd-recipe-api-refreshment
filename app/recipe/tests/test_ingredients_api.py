@@ -9,7 +9,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from core.models import Ingredient
+from core.models import Ingredient, Recipe
 
 from recipe.serializers import IngredientSerializer
 
@@ -104,3 +104,36 @@ class PrivateIngredientsApiTests(TestCase):
         # used filter bcoz get throw error if no ingredient found
         ingredient = Ingredient.objects.filter(user=self.user).first()
         self.assertIsNone(ingredient)
+
+    def test_ingredients_assigned_to_recipes(self):
+        """Test listing ingredients by those assigned to recipes"""
+        in1 = Ingredient.objects.create(user=self.user, name='ing1')
+        in2 = Ingredient.objects.create(user=self.user, name='ing2')
+        recipe = Recipe.objects.create(
+            title='recipe1', time_minutes=5, price=5.00, user=self.user
+        )
+        recipe.ingredients.add(in1)
+
+        res = self.client.get(INGREDIENTS_LIST, {'assigned_only': 1})
+
+        serializer1 = IngredientSerializer(in1)
+        serializer2 = IngredientSerializer(in2)
+        self.assertIn(serializer1.data, res.data)
+        self.assertNotIn(serializer2.data, res.data)
+
+    def test_filtered_ingredients_unique(self):
+        """Test filtered ingredients returns a unique list"""
+        ing1 = Ingredient.objects.create(user=self.user, name='ing1')
+        Ingredient.objects.create(user=self.user, name='ing2')
+        recipe1 = Recipe.objects.create(
+            title='recipe1', time_minutes=5, price=5.00, user=self.user
+        )
+        recipe2 = Recipe.objects.create(
+            title='recipe2', time_minutes=5, price=5.00, user=self.user
+        )
+        recipe1.ingredients.add(ing1)
+        recipe2.ingredients.add(ing1)
+
+        res = self.client.get(INGREDIENTS_LIST, {'assigned_only': 1})
+
+        self.assertEqual(len(res.data), 1)
