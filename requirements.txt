@@ -3,4 +3,4 @@ djangorestframework>=3.14.0,<3.15
 psycopg2-binary==2.9.9 # in production use psycopg2 build from source
 drf-spectacular==0.27.1
 pillow==10.2.0
-uWSGI==2.0.24
+# uWSGI==2.0.24
